@@ -17,7 +17,7 @@ Ensure you have the following installed on your system:
 ### Installation  
 Clone this repository and navigate into the project folder:  
 ```sh
-git clone https://github.com/your-username/tech-quiz.git
+git clone [(https://github.com/sbaird22/E2E-testing)]
 cd tech-quiz
 npm install
 npm run dev
@@ -37,5 +37,6 @@ This project is licensed under the MIT License. See the LICENSE file for details
 💡 Credits
 Development & Code: @du
 Testing & Debugging: @Shane Baird
+walktrhough video: https://drive.google.com/file/d/1r11PvPEJD1xlM1WUucWvqZFow1rFrvSv/view
 
 
