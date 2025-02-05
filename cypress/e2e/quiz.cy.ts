@@ -1,76 +1,45 @@
-import React from "react";
-import { mount } from "cypress/react";
-import Quiz from "../../client/src/components/Quiz"; // Adjusted relative path
-
-// Mock Questions
-const mockQuestions = [
-  {
-    question: "What is the capital of France?",
-    answers: [
-      { text: "Berlin", isCorrect: false },
-      { text: "Madrid", isCorrect: false },
-      { text: "Paris", isCorrect: true },
-      { text: "Lisbon", isCorrect: false },
-    ],
-  },
-  {
-    question: "What is 2 + 2?",
-    answers: [
-      { text: "3", isCorrect: false },
-      { text: "4", isCorrect: true },
-      { text: "5", isCorrect: false },
-      { text: "6", isCorrect: false },
-    ],
-  },
-];
-
-describe("Quiz Component Tests", () => {
+describe("E2E - Tech Quiz", () => {
   beforeEach(() => {
-    cy.stub(global, "fetch").resolves({
-      json: cy.stub().resolves(mockQuestions),
-    });
+    cy.visit("http://localhost:3001"); 
+    cy.intercept("GET", "/api/questions/random").as("getQuestions");
   });
 
-  it("displays the Start Quiz button initially", () => {
-    mount(<Quiz />);
-    cy.contains("Start Quiz").should("exist");
+  it("should display Start Quiz button on load", () => {
+    cy.contains("Start Quiz").should("be.visible"); // ✅ Ensure button loads
   });
 
-  it("fetches and displays the first question on start", () => {
-    mount(<Quiz />);
+  it("should start the quiz when Start Quiz is clicked", () => {
     cy.contains("Start Quiz").click();
-    cy.contains("What is the capital of France?", { timeout: 5000 }).should("exist");
+    cy.pause();
+    cy.wait("@getQuestions"); // ✅ Wait for API call
+    cy.get("h2", { timeout: 5000 }).should("exist"); // ✅ Ensure first question appears
   });
 
-  it("displays answer choices", () => {
-    mount(<Quiz />);
-    cy.contains("Start Quiz").click();
-    cy.get("button").should("have.length", 4); // ✅ Fix: Expect only 4 answer buttons
+  it("should move to the next question when an answer is clicked", () => {
+    cy.get("button").eq(1).click(); // ✅ Click first answer
+    cy.wait(1000); // 🔹 Allow UI update
+    cy.get("h2").should("not.contain", "What is the capital of France?"); // ✅ Ensure new question appears
   });
 
-  it("moves to the next question when an answer is clicked", () => {
-    mount(<Quiz />);
-    cy.contains("Start Quiz").click();
-    cy.contains("What is the capital of France?", { timeout: 5000 }).should("exist");
-    cy.contains("Paris").click();
-    cy.contains("What is 2 + 2?", { timeout: 5000 }).should("exist");
+  it("should display final score when quiz is completed", () => {
+    cy.pause();
+    cy.get("button").eq(1).click(); // ✅ Answer Q1
+    cy.wait(500);
+    cy.get("button").eq(2).click(); // ✅ Answer Q2
+    cy.wait(500);
+
+    cy.contains("Quiz Completed", { timeout: 7000 }).should("be.visible"); // ✅ Ensure quiz completion
+    cy.pause();
+    cy.contains(/^Your score: \d+\/\d+$/).should("exist").and("be.visible"); // ✅ Check score format
+    cy.pause();
   });
 
-  it("shows the final score when all questions are answered", () => {
-    mount(<Quiz />);
-    cy.contains("Start Quiz").click();
-    cy.contains("Paris").click();
-    cy.contains("4").click();
-    cy.contains("Quiz Completed", { timeout: 5000 }).should("exist");
-    cy.contains("Your score:").should("exist"); // ✅ Dynamic check
-  });
+  it("should restart quiz when Take New Quiz is clicked", () => {
+    cy.contains("Take New Quiz", { timeout:7000}).click(); // ✅ Restart
+    cy.pause();
 
-  it("allows the user to restart the quiz", () => {
-    mount(<Quiz />);
-    cy.contains("Start Quiz").click();
-    cy.contains("Paris").click();
-    cy.contains("4").click();
-    cy.contains("Take New Quiz").click();
-    cy.contains("Start Quiz").should("exist");
+    cy.wait("@getQuestions"); // ✅ Ensure new questions load
+    cy.wait(500);
+    cy.get("h2").should("contain", "What is"); // ✅ Ensure quiz restarted
   });
 });
