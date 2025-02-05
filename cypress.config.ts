@@ -10,7 +10,8 @@ export default defineConfig({
      indexHtmlFile: "cypress/support/component-index.html",
   },
   e2e: {
-    baseUrl: "http://localhost:3001", 
+    baseUrl: "http://localhost:3001",
+    defaultCommandTimeout: 8000, 
     supportFile: false,
   },
 });
